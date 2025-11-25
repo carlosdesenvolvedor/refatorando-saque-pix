@@ -1,0 +1,22 @@
+# Define o comportamento padrão para todos os arquivos.
+# Git tentará adivinhar se um arquivo é texto ou binário.
+* text=auto eol=lf
+
+# Força arquivos de texto conhecidos a terem finais de linha LF no repositório.
+*.php text
+*.js text
+*.css text
+*.html text
+*.md text
+*.txt text
+*.json text
+*.yml text
+*.xml text
+
+# Garante que scripts de shell sempre usem LF.
+*.sh text eol=lf
+
+# Marca arquivos binários para que o Git não os modifique.
+*.png binary
+*.jpg binary
+*.gif binary

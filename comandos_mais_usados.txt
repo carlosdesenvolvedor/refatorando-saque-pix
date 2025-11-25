@@ -1,0 +1,25 @@
+##acessar mysql dentro do container
+docker-compose exec saque-pix-mysql mysql -u user -psecret pix_withdraw_db
+#todas as table
+docker exec -it saque-pix-mysql mysql -u user -psecret pix_withdraw_db -e "SHOW TABLES;"
+
+
+
+###Restartar quando altero alguma coisa da tabela rota etc
+ docker-compose restart saque-pix-app
+
+####ver log das respons 
+ docker logs -f saque-pix-app     
+
+*Entrar no container
+docker exec -it saque-pix-app /bin/sh
+
+## gera a migration no container
+php bin/hyperf.php gen:migration create_withdrawals_table
+
+##gera uma classe model nome da classe essemplo withdrals no container
+php bin/hyperf.php gen:model withdrals
+
+#comando para gerar controller ex WithdrawalController no container
+php bin/hyperf.php gen:controller WithdrawalController
+
