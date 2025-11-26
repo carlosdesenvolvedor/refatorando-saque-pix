@@ -15,6 +15,7 @@ Router::addServer('http', function () {
     // Rotas para Contas (Accounts)
     Router::post('/accounts', 'App\Controller\AccountController@store');
     Router::post('/account/{id}/deposit', 'App\Controller\AccountController@deposit');
+    Router::get('/account/{id}/balance', 'App\Controller\AccountController@balance');
 
     // Rotas para Chaves PIX (PixKeys)
     Router::post('/pix-keys', 'App\Controller\PixKeyController@store');

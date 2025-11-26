@@ -127,6 +127,22 @@ docker-compose exec saque-pix-app php bin/hyperf.php migrate
 }
 
 ```
+## 📱 Interface do Usuário (Frontend)
+
+O projeto conta com um frontend moderno desenvolvido em **Flutter Web**, consumindo a API Hyperf.
+
+| Dashboard / Home | Criação de Conta |
+| :---: | :---: |
+| ![](.github/images/tela_principal.png) | ![](.github/images/criar_conta.png) |
+
+| Área de Depósito | Solicitação de Saque |
+| :---: | :---: |
+| ![](.github/images/depositar_valor.png) | ![](.github/images/tela_saque.png) |
+
+| Feedback de Sucesso | |
+| :---: | :---: |
+| ![](.github/images/saque_ok.png) | |
+
 ## ✅ Qualidade Assegurada (Testes E2E)
 
 O projeto inclui uma suíte de testes automatizados (`tests/e2e_test.ps1`) que valida todos os cenários críticos:

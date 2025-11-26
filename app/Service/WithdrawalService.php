@@ -38,7 +38,8 @@ class WithdrawalService
         $isScheduled = $scheduledFor !== null;
         $amount = (float) $data['amount'];
 
-        return Db::transaction(function () use ($accountId, $data, $amount, $scheduledFor, $isScheduled) {
+        /** @var AccountWithdraw $withdrawal */
+        $withdrawal = Db::transaction(function () use ($accountId, $data, $amount, $scheduledFor, $isScheduled) {
             $account = Account::query()->where('id', $accountId)->lockForUpdate()->first();
 
             if (! $account) {
@@ -55,29 +56,35 @@ class WithdrawalService
                 $account->save();
             }
 
-            $withdrawal = AccountWithdraw::create([
-                'account_id' => $accountId,
-                'method' => $data['method'],
-                'amount' => $amount,
-                'scheduled' => $isScheduled,
-                'scheduled_for' => $scheduledFor ? $scheduledFor->toDateTimeString() : null,
-                'done' => ! $isScheduled, // If not scheduled, it's done immediately
-                'error' => false,
-            ]);
+            // 1. Instanciar e Salvar AccountWithdraw
+            $withdrawal = new AccountWithdraw();
+            $withdrawal->account_id = $accountId;
+            $withdrawal->method = $data['method'];
+            $withdrawal->amount = $amount;
+            $withdrawal->scheduled = $isScheduled;
+            $withdrawal->scheduled_for = $scheduledFor ? $scheduledFor->toDateTimeString() : null;
+            $withdrawal->done = ! $isScheduled;
+            $withdrawal->error = false;
+            $withdrawal->save(); // UUID gerado aqui pelo Model
 
-            AccountWithdrawPix::create([
-                'account_withdraw_id' => $withdrawal->id,
-                'type' => $data['pix']['type'],
-                'key' => $data['pix']['key'],
-            ]);
-
-            // Dispatch job if immediate
-            if (! $isScheduled) {
-                $this->asyncQueue->push(new SendWithdrawalEmailJob($withdrawal->id));
+            // 2. Instanciar e Salvar AccountWithdrawPix
+            if (isset($data['pix'])) {
+                $pix = new AccountWithdrawPix();
+                $pix->account_withdraw_id = $withdrawal->id;
+                $pix->type = $data['pix']['type'];
+                $pix->key = $data['pix']['key'];
+                $pix->save();
             }
 
             return $withdrawal;
         });
+
+        // Dispatch job if immediate (AFTER transaction commit)
+        if (! $isScheduled) {
+            $this->asyncQueue->push(new SendWithdrawalEmailJob($withdrawal->id));
+        }
+
+        return $withdrawal;
     }
 
     public function processScheduledWithdrawals(): void
