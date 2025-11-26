@@ -14,14 +14,14 @@ use Hyperf\HttpServer\Router\Router;
 Router::addServer('http', function () {
     // Rotas para Contas (Accounts)
     Router::post('/accounts', 'App\Controller\AccountController@store');
-    Router::post('/accounts/{id}/deposit', 'App\Controller\AccountController@deposit');
+    Router::post('/account/{id}/deposit', 'App\Controller\AccountController@deposit');
 
     // Rotas para Chaves PIX (PixKeys)
     Router::post('/pix-keys', 'App\Controller\PixKeyController@store');
 
     // Rotas para Saques (Withdrawals)
-    // Router::get('/withdrawals', 'App\Controller\WithdrawalController@index'); // TODO: Implementar método index
-    Router::post('/withdrawals', 'App\Controller\WithdrawalController@store');
+    // Rota antiga de saque, desativada para dar lugar à nova especificação.
+    // Router::post('/withdrawals', 'App\Controller\WithdrawalController@store');
     Router::patch('/withdrawals/{id}/cancel', 'App\Controller\WithdrawalController@cancel');
 
     // Rota raiz para health check
@@ -52,4 +52,7 @@ Router::addServer('http', function () {
             return "<h1>ERRO CRÍTICO NA VIEW:</h1>" . "<h3>" . $e->getMessage() . "</h3>" . "<pre>" . $e->getTraceAsString() . "</pre>";
         }
     });
+
+    // Nova rota de saque conforme especificação
+    Router::post('/account/{accountId}/balance/withdraw', 'App\Controller\WithdrawalController@store');
 });

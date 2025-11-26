@@ -34,7 +34,8 @@
         "hyperf/rpc-server": "~3.1.0",
         "hyperf/validation": "~3.1.0",
         "hyperf/view": "~3.1.0",
-        "nesbot/carbon": "^2.73"
+        "nesbot/carbon": "^2.73",
+        "ramsey/uuid": "^4.9"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",

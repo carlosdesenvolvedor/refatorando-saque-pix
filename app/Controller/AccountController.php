@@ -30,8 +30,6 @@ class AccountController extends AbstractController
             $request->all(),
             [
                 'name' => 'required|string|max:255',
-                'cpf' => 'required|string|unique:accounts,cpf', // Garante que o CPF seja único
-                'email' => 'required|email|unique:accounts,email', // Garante que o e-mail seja único
             ]
         );
 
@@ -50,7 +48,7 @@ class AccountController extends AbstractController
     /**
      * Consulta o saldo de uma conta específica.
      */
-    public function balance(int $id, ResponseInterface $response): \Psr\Http\Message\ResponseInterface
+    public function balance(string $id, ResponseInterface $response): \Psr\Http\Message\ResponseInterface
     {
         // 1. Usa o Account Model para encontrar a conta pelo ID
         $account = Account::find($id);
@@ -67,7 +65,7 @@ class AccountController extends AbstractController
      * Deposita um valor em uma conta específica.
      */
     public function deposit(
-        int $id,
+        string $id,
         RequestInterface $request,
         ResponseInterface $response
     ) {

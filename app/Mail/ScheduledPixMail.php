@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Model\Withdrawal;
+use App\Model\AccountWithdraw;
 use FriendsOfHyperf\Mail\Mailable;
 
 class ScheduledPixMail extends Mailable
 {
     /**
-     * @var Withdrawal O modelo de saque com todos os dados.
+     * @var AccountWithdraw O modelo de saque com todos os dados.
      */
-    public Withdrawal $withdrawal;
+    public AccountWithdraw $withdrawal;
 
-    public function __construct(Withdrawal $withdrawal)
+    public function __construct(AccountWithdraw $withdrawal)
     {
         $this->withdrawal = $withdrawal;
     }

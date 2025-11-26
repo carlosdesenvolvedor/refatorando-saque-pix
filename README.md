@@ -1,226 +1,163 @@
-# SaquePix - API de Saque via PIX
+# 🏦 SaquePix2 - API de Conta Digital de Alta Performance
 
-Uma API para simular operações de uma conta digital, incluindo criação de conta, depósito, cadastro de chaves PIX e solicitação de saques, construída com Hyperf 3.1. O sistema utiliza uma fila (Queue) para processar o envio de e-mails de notificação de forma assíncrona.
+## 🎯 Sobre o Projeto
 
-## Pré-requisitos
+O **SaquePix2** é uma API de Conta Digital robusta e escalável, projetada para processar transações financeiras com **alta performance** e **baixa latência**. Construída sobre o framework **Hyperf** (baseado em Swoole/Corrotinas), a aplicação adota uma arquitetura orientada a microsserviços e eventos.
 
-- Docker
-- Docker Compose
-
-## Como Executar
-
-1.  Clone este repositório para a sua máquina.
-2.  Abra um terminal na raiz do projeto.
-3.  Execute o comando para construir e iniciar os contêineres:
-    ```bash
-    # 1. Instala as dependências localmente (necessário apenas na primeira vez ou após mudar o composer.json)
-    docker-compose run --rm --no-deps --entrypoint="" saque-pix-app composer install
-    
-    # 2. Constrói a imagem e sobe os serviços
-    docker-compose up -d --build
-    ```
-4.  A aplicação estará disponível na URL `http://localhost:9501`.
-
-## Verificando E-mails (MailHog)
-
-Todos os e-mails de notificação de saque são capturados pelo MailHog. Para visualizá-los, acesse a interface web no seu navegador:
-
-- **URL:** `http://localhost:8025`
-
-## Comandos Docker Úteis
-
-- **Ver logs da aplicação:** `docker logs -f saque-pix-app`
-- **Parar e remover contêineres e volumes:** `docker-compose down -v`
-- **Executar um comando dentro do contêiner da aplicação (ex: abrir um shell):** `docker-compose exec saque-pix-app sh`
-
-## Guia de Uso da API (Fluxo de Teste Completo)
-
-Para testar a funcionalidade principal, siga os passos abaixo utilizando uma ferramenta como **Postman**, **Insomnia** ou `curl`.
+O sistema gerencia o ciclo de vida completo de uma conta digital, incluindo criação, depósitos e, principalmente, **saques via PIX** (imediatos e agendados). A solução implementa filas assíncronas para notificações e tarefas agendadas (Cron) para processamento de transações futuras, garantindo que a thread principal da API permaneça livre para atender novas requisições.
 
 ---
 
-### Passo 1: Criar uma Conta com E-mail
+## 🛠 Stack Tecnológica
 
-Primeiro, crie uma conta para o usuário. O `name`, `cpf` e `email` são obrigatórios.
+A stack foi escolhida para maximizar a concorrência e a eficiência de recursos:
 
-- **Método:** `POST`
-- **URL:** `http://localhost:9501/accounts`
-- **Body (JSON):**
+- **Linguagem:** PHP 8.2
+- **Framework:** Hyperf 3.1 (Swoole/Coroutines)
+- **Banco de Dados:** MySQL 8.0
+- **Cache & Filas:** Redis (Async Queue)
+- **Containerização:** Docker & Docker Compose
+- **Testes de E-mail:** MailHog
+
+---
+
+## 🏗 Decisões de Arquitetura
+
+Como Tech Lead, as seguintes decisões foram tomadas para garantir robustez, segurança e manutenibilidade:
+
+### 1. 🆔 UUIDs (Universally Unique Identifiers)
+Adotamos UUIDs (v4) como chaves primárias em todas as tabelas (`accounts`, `account_withdraws`, etc.).
+- **Porquê:** Garante unicidade global, dificulta a enumeração de registros por atacantes (security through obscurity) e facilita a distribuição de dados (sharding) em cenários futuros de escala horizontal.
+
+### 2. ⚡ Filas Assíncronas (Redis)
+O envio de e-mails transacionais é desacoplado da requisição HTTP principal.
+- **Porquê:** Enviar e-mail é uma operação lenta e propensa a falhas de rede. Ao mover essa responsabilidade para um *Job* no Redis, a API responde instantaneamente ao usuário (`201 Created`), enquanto o "Worker" processa o envio em background, melhorando drasticamente a experiência do usuário e o throughput da API.
+
+### 3. ⏰ Crontab & Agendamento
+Saques agendados não bloqueiam recursos. Eles são persistidos no banco e processados por uma tarefa Cron (`ProcessScheduledWithdrawals`) que roda a cada minuto.
+- **Porquê:** Permite o agendamento flexível de transações sem manter conexões abertas. A lógica de negócio no Cron garante atomicidade e consistência, verificando saldo e executando a transação no momento exato.
+
+### 4. 🛡️ Centralized Exception Handling
+Implementamos um tratamento global de exceções (`BusinessExceptionHandler`).
+- **Porquê:** Diferenciamos claramente erros de negócio (ex: "Saldo Insuficiente") de erros de sistema. Erros de negócio retornam **HTTP 422 Unprocessable Entity** com uma mensagem clara em JSON, enquanto erros inesperados retornam **500**. Isso facilita a integração por parte do front-end e mantém os logs limpos.
+
+---
+
+## 🚀 Guia de Instalação
+
+Siga os passos abaixo para rodar o projeto localmente:
+
+### Pré-requisitos
+- Docker e Docker Compose instalados.
+
+### Passo a Passo
+
+1. **Subir os containers:**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+2. **Executar as Migrations (Criação das tabelas):**
+   ```bash
+   docker-compose exec saque-pix-app php bin/hyperf.php migrate
+   ```
+
+3. **Acessar a Aplicação:**
+   - **API:** `http://localhost:9501`
+   - **MailHog (E-mails):** `http://localhost:8025`
+
+---
+
+## 📖 Documentação da API
+
+Abaixo estão os principais endpoints para interagir com o sistema.
+
+### 1. Criar Conta
+Cria uma nova conta digital com saldo inicial zero.
+
+- **Endpoint:** `POST /accounts`
+- **Body:**
   ```json
   {
-      "name": "Cliente Exemplo",
-      "cpf": "12345678900",
-      "email": "cliente.exemplo@mailhog.local"
+    "name": "Carlos Desenvolvedor",
+    "document": "12345678900",
+    "email": "carlos@example.com"
+  }
+  ```
+- **Resposta (201 Created):**
+  ```json
+  {
+    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "name": "Carlos Desenvolvedor",
+    "balance": "0.00",
+    ...
   }
   ```
 
-**Resposta de Sucesso (201 Created):**
+### 2. Realizar Depósito
+Adiciona saldo a uma conta existente.
 
-> **Importante:** Anote o `id` retornado. Você precisará dele nos próximos passos.
+- **Endpoint:** `POST /accounts/{uuid}/deposit`
+- **Body:**
+  ```json
+  {
+    "amount": 100.50
+  }
+  ```
+- **Resposta (200 OK):**
+  ```json
+  {
+    "account_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "current_balance": "100.50"
+  }
+  ```
 
-```json
-{
-    "name": "Cliente Exemplo",
-    "updated_at": "2024-05-23T10:00:00.000000Z",
-    "created_at": "2024-05-23T10:00:00.000000Z",
-    "id": 1
-}
-```
+### 3. Solicitar Saque (PIX)
+Realiza um saque imediato ou agendado.
 
----
+- **Endpoint:** `POST /accounts/{uuid}/withdraw`
+- **Body (Saque Imediato):**
+  ```json
+  {
+    "method": "PIX",
+    "amount": 50.00,
+    "pix": {
+      "type": "email",
+      "key": "chave@pix.com"
+    },
+    "schedule": null
+  }
+  ```
 
-### Passo 2: Cadastrar uma Chave PIX para a Conta
+- **Body (Saque Agendado):**
+  *A data deve ser futura e no máximo até 7 dias.*
+  ```json
+  {
+    "method": "PIX",
+    "amount": 50.00,
+    "pix": {
+      "type": "cpf",
+      "key": "12345678900"
+    },
+    "schedule": "2025-12-01 10:00:00"
+  }
+  ```
 
-Com o `id` da conta, cadastre uma chave PIX para ela.
+- **Resposta de Erro (Ex: Saldo Insuficiente - 422):**
+  ```json
+  {
+    "message": "Saldo insuficiente",
+    "code": 422
+  }
+  ```
+  ## ✅ Qualidade Assegurada (Testes E2E)
 
-- **Método:** `POST`
-- **URL:** `http://localhost:9501/pix-keys`
-- **Body (JSON):**
-    > **Tipos de chave (`kind`):** `cpf`, `email`, `phone`, `random`
+O projeto inclui uma suíte de testes automatizados (`tests/e2e_test.ps1`) que valida todos os cenários críticos:
+1. Criação de Conta e Validação de UUID.
+2. Depósito e Atualização de Saldo.
+3. Saque Imediato (Integração com MailHog).
+4. Saque Agendado (Validação de Cron).
+5. Regras de Negócio (Bloqueio de data > 7 dias e Saldo Insuficiente).
 
-    ```json
-    {
-        "account_id": 1,
-        "kind": "email",
-        "key": "cliente.exemplo@email.com"
-    }
-    ```
-
-    **Resposta de Sucesso (201 Created):**
-
-    ```json
-    {
-        "account_id": "1",
-        "kind": "email",
-        "key": "cliente.exemplo@email.com",
-        "updated_at": "2024-05-23T10:05:00.000000Z",
-        "created_at": "2024-05-23T10:05:00.000000Z",
-        "id": 1
-    }
-    ```
-    ---
-
-    ### Passo 3: Depositar Saldo na Conta
-
-    Com o `id` da conta em mãos, adicione um saldo a ela.
-
-    - **Método:** `POST`
-    - **URL:** `http://localhost:9501/accounts/1/deposit` (substitua `1` pelo `id` da sua conta)
-    - **Body (JSON):**
-    ```json
-    {
-        "amount": 500.00
-    }
-    ```
-
-    **Resposta de Sucesso (200 OK):**
-
-    ```json
-    {
-        "id": 1,
-        "name": "Cliente Exemplo",
-        "balance": "500.00",
-        "created_at": "...",
-        "updated_at": "..."
-    }
-    ```
-
-    ---
-
-    ### Passo 4: Solicitar um Saque Imediato
-
-    Agora, simule um saque da conta para uma chave PIX de destino.
-
-    - **Método:** `POST`
-    - **URL:** `http://localhost:9501/withdrawals`
-    - **Body (JSON):**
-    ```json
-    {
-        "account_id": 1,
-        "amount": 120.50,
-        "pix_key_id": 1
-    }
-    ```
-
-    **Resposta de Sucesso (201 Created):**
-
-    ```json
-    {    <?php
-    ```php
-    // filepath: [processes.php](http://_vscodecontentref_/0)
-    <?php
-    
-    declare(strict_types=1);
-    
-    return [
-        // Ensure the async queue consumer process is registered so queued jobs are processed
-        Hyperf\AsyncQueue\Process\ConsumerProcess::class,
-    ];
-        "account_id": "1",
-        "amount": "120.50",
-        "pix_key_id": "1",
-        "status": "completed",
-        "updated_at": "...",
-        "created_at": "...",
-        "id": 1
-    }
-    ```
-
-    ---
-
-    ### Passo 5: Testar um Saque Agendado (Crontab)
-
-    Para verificar se o Crontab está funcionando, você pode agendar um saque para o futuro. O sistema deve processá-lo automaticamente na data e hora especificadas.
-
-    **1. Solicite um Saque Agendado**
-
-    - **Método:** `POST`
-    - **URL:** `http://localhost:9501/withdrawals`
-    - **Body (JSON):**
-    > **Importante:** Use `scheduled_for` e defina o valor para alguns minutos no futuro (ex: `2025-12-25T10:15:00`).
-
-    ```json
-    {
-        "account_id": 1,
-        "amount": 50.00,
-        "pix_key_id": 1,
-        "scheduled_for": "2025-12-25T10:15:00"
-    }
-    ```
-
-    **Resposta Esperada (201 Created):**
-    O status inicial do saque será `scheduled`. Anote o `id` do saque retornado.
-
-    ```json
-    {
-        "account_id": "1",
-        "amount": "50.00",
-        "pix_key_kind": "email",
-        "pix_key_key": "cliente.exemplo@email.com",
-        "scheduled_for": "2025-12-25T10:15:00.000000Z",
-        "status": "scheduled",
-        "updated_at": "...",
-        "created_at": "...",
-        "id": 2
-    }
-    ```
-
-    **2. Verifique o Status Após o Agendamento**
-
-    Aguarde o horário agendado passar. O Crontab, que roda a cada minuto, deve processar o saque. Você pode verificar os logs para ver a execução da tarefa com `docker logs -f saque-pix-app`.
-
-    Após o processamento, consulte a lista de saques da conta.
-
-    - **Método:** `GET`
-    - **URL:** `http://localhost:9501/withdrawals?account_id=1` (substitua `1` pelo `id` da sua conta)
-
-    **Resposta Esperada:**
-    O saque que antes estava com status `scheduled` agora deve aparecer como `completed`.
-
-    ---
-
-    ### Outros Endpoints
-
-    - **Consultar Saldo:** `GET /accounts/{accountId}/balance`
-    - **Criar Chave PIX:** `POST /pix-keys`
-    - **Listar Chaves PIX:** `GET /pix-keys`
+### Evidência de Execução:
+![Testes Automatizados](.github/images/evidence.png)

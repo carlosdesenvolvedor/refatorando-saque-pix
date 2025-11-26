@@ -13,6 +13,7 @@ return [
     'handler' => [
         'http' => [
             // Adicione seu handler customizado aqui, no topo
+            \App\Exception\Handler\BusinessExceptionHandler::class,
             \App\Exception\Handler\HttpNotFoundExceptionHandler::class,
             
             // Handler padrão do Hyperf

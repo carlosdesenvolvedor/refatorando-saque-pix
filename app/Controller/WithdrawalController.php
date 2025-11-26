@@ -24,27 +24,23 @@ class WithdrawalController extends AbstractController
     ) {
     }
 
-    public function store(RequestInterface $request, ResponseInterface $response): \Psr\Http\Message\ResponseInterface
+    public function store(string $accountId, RequestInterface $request, ResponseInterface $response): \Psr\Http\Message\ResponseInterface
     {
         $data = $request->all();
 
         $validator = $this->validatorFactory->make($data, [
-            'account_id' => 'required|integer|exists:accounts,id',
-            'pix_key_id' => 'required|integer|exists:pix_keys,id',
-            'amount' => 'required|numeric|min:0.01',
-            'scheduled_for' => 'nullable|date',
+            'method' => 'required|in:PIX',
+            'amount' => 'required|numeric|gt:0',
+            'pix.type' => 'required|in:email,cpf',
+            'pix.key' => 'required',
+            'schedule' => 'nullable|date|after:now|before:+7 days',
         ]);
 
         if ($validator->fails()) {
             return $response->json(['errors' => $validator->errors()])->withStatus(422);
         }
 
-        try {
-            $withdrawal = $this->withdrawalService->createWithdrawal($validator->validated());
-            return $response->json($withdrawal)->withStatus(201);
-        } catch (Throwable $e) {
-            $this->logger->error('WithdrawalController::store error: ' . $e->getMessage(), ['exception' => $e]);
-            return $response->json(['message' => 'An unexpected error occurred: ' . $e->getMessage()])->withStatus(500);
-        }
+        $withdrawal = $this->withdrawalService->createWithdrawal($accountId, $validator->validated());
+        return $response->json($withdrawal)->withStatus(201);
     }
 }

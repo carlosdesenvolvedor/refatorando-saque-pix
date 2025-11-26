@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Job;
 
 use App\Mail\ScheduledPixMail;
-use App\Model\Withdrawal;
+use App\Model\AccountWithdraw;
 use FriendsOfHyperf\Mail\Facade\Mail;
 use Hyperf\AsyncQueue\Job;
 use Hyperf\Context\ApplicationContext;
@@ -15,9 +15,9 @@ use Hyperf\Contract\StdoutLoggerInterface; // Fallback log
 
 class SendWithdrawalEmailJob extends Job
 {
-    public int $withdrawalId;
+    public string $withdrawalId;
 
-    public function __construct(int $withdrawalId)
+    public function __construct(string $withdrawalId)
     {
         $this->withdrawalId = $withdrawalId;
     }
@@ -32,34 +32,28 @@ class SendWithdrawalEmailJob extends Job
 
         $logger->info("JOB INICIADO: Processando saque ID {$this->withdrawalId}...");
 
-        // CORREÇÃO CRÍTICA: Sempre buscar o modelo do zero dentro do Job com Eager Loading.
-        $withdrawal = Withdrawal::with('account')->find($this->withdrawalId);
+        // Carrega o relacionamento 'pix' para obter a chave (e-mail)
+        $withdrawal = AccountWithdraw::with('pix')->find($this->withdrawalId);
 
         if (!$withdrawal) {
             $logger->warning("JOB ABORTADO: Saque {$this->withdrawalId} não encontrado no banco.");
             return;
         }
 
-        // Logs de depuração agressivos para inspecionar os dados
+        // Logs de depuração
         $logger->info("DEBUG JOB - ID Saque: " . $withdrawal->id);
-        $logger->info("DEBUG JOB - Tem Conta?: " . ($withdrawal->account ? 'SIM' : 'NAO'));
-        if ($withdrawal->account) {
-            $logger->info("DEBUG JOB - Email na Conta: " . ($withdrawal->account->email ?: 'VAZIO'));
+        $logger->info("DEBUG JOB - Tem Pix?: " . ($withdrawal->pix ? 'SIM' : 'NAO'));
+        
+        if ($withdrawal->pix) {
+            $logger->info("DEBUG JOB - Chave Pix: " . $withdrawal->pix->key);
         }
-        // Fim dos logs de depuração
 
-        // Busca o e-mail dinamicamente da conta associada ao saque.
-        $recipientEmail = $withdrawal->account->email ?? null;
-
-        // Verificação de segurança mais robusta: a conta foi carregada?
-        if (!$withdrawal->account) {
-            $logger->error("JOB FALHOU: Não foi possível carregar a conta associada ao saque ID {$this->withdrawalId}.");
-            return;
-        }
+        // O destinatário é a chave PIX (assumindo que o tipo é email, conforme regra do PDF)
+        $recipientEmail = $withdrawal->pix->key ?? null;
 
         // Verificação de segurança: não prosseguir se o e-mail não estiver definido.
         if (empty($recipientEmail)) {
-            $logger->warning("JOB ABORTADO: A conta associada ao saque ID {$this->withdrawalId} não possui um e-mail cadastrado.");
+            $logger->warning("JOB ABORTADO: O saque ID {$this->withdrawalId} não possui uma chave PIX (e-mail) associada.");
             return;
         }
 

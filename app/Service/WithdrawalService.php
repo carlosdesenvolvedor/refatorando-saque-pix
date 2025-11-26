@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Account;
-use App\Model\Withdrawal;
+use App\Model\AccountWithdraw;
+use App\Model\AccountWithdrawPix;
 use App\Job\SendWithdrawalEmailJob;
 use Carbon\Carbon;
 use Psr\Log\LoggerInterface;
@@ -22,66 +23,122 @@ class WithdrawalService
         $this->asyncQueue = $driverFactory->get('default');
     }
 
-    public function createWithdrawal(array $data): Withdrawal
+    public function createWithdrawal(string $accountId, array $data): AccountWithdraw
     {
-        // Normalize scheduled_for
+        // Normalize schedule
         $scheduledFor = null;
-        if (! empty($data['scheduled_for'])) {
+        if (! empty($data['schedule'])) {
             try {
-                $scheduledFor = Carbon::parse($data['scheduled_for']);
+                $scheduledFor = Carbon::parse($data['schedule']);
             } catch (\Throwable $e) {
                 $scheduledFor = null;
             }
         }
 
-        $status = $scheduledFor ? 'scheduled' : 'completed';
+        $isScheduled = $scheduledFor !== null;
+        $amount = (float) $data['amount'];
 
-        $accountId = isset($data['account_id']) ? (int) $data['account_id'] : 0;
-        $pixKeyId = isset($data['pix_key_id']) ? (int) $data['pix_key_id'] : 0;
-        $amount = isset($data['amount']) ? (float) $data['amount'] : 0.0;
-
-        if ($accountId <= 0) {
-            throw new \InvalidArgumentException('account_id is required');
-        }
-        if ($pixKeyId <= 0) {
-            throw new \InvalidArgumentException('pix_key_id is required');
-        }
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('amount must be greater than zero');
-        }
-
-        return Db::transaction(function () use ($accountId, $pixKeyId, $amount, $scheduledFor, $status) {
+        return Db::transaction(function () use ($accountId, $data, $amount, $scheduledFor, $isScheduled) {
             $account = Account::query()->where('id', $accountId)->lockForUpdate()->first();
 
             if (! $account) {
-                throw new \RuntimeException('Account not found');
+                throw new \App\Exception\BusinessException('Account not found');
             }
 
-            if ($status === 'completed') {
+            // Deduct balance only if not scheduled (immediate withdrawal)
+            if (! $isScheduled) {
                 $currentBalance = (float) $account->balance;
                 if ($currentBalance < $amount) {
-                    throw new \RuntimeException('Insufficient funds');
+                    throw new \App\Exception\BusinessException('Saldo insuficiente');
                 }
                 $account->balance = number_format($currentBalance - $amount, 2, '.', '');
                 $account->save();
             }
 
-            $withdrawal = Withdrawal::create([
+            $withdrawal = AccountWithdraw::create([
                 'account_id' => $accountId,
-                'amount' => number_format($amount, 2, '.', ''),
-                'pix_key_id' => $pixKeyId,
-                'status' => $status,
+                'method' => $data['method'],
+                'amount' => $amount,
+                'scheduled' => $isScheduled,
                 'scheduled_for' => $scheduledFor ? $scheduledFor->toDateTimeString() : null,
+                'done' => ! $isScheduled, // If not scheduled, it's done immediately
+                'error' => false,
             ]);
 
-            // Despacha o job para a fila assíncrona se o saque for imediato
-            if ($status === 'completed') {
+            AccountWithdrawPix::create([
+                'account_withdraw_id' => $withdrawal->id,
+                'type' => $data['pix']['type'],
+                'key' => $data['pix']['key'],
+            ]);
+
+            // Dispatch job if immediate
+            if (! $isScheduled) {
                 $this->asyncQueue->push(new SendWithdrawalEmailJob($withdrawal->id));
             }
-            // ADICIONAR ESTA LINHA:
-            $this->asyncQueue->push(new SendWithdrawalEmailJob($withdrawal->id));
 
             return $withdrawal;
         });
+    }
+
+    public function processScheduledWithdrawals(): void
+    {
+        $withdrawals = AccountWithdraw::query()
+            ->where('scheduled', true)
+            ->where('done', false)
+            ->where('error', false)
+            ->where('scheduled_for', '<=', Carbon::now())
+            ->get();
+
+        foreach ($withdrawals as $withdrawal) {
+            try {
+                Db::transaction(function () use ($withdrawal) {
+                    // Reload withdrawal and lock account
+                    $withdrawal->refresh();
+                    if ($withdrawal->done || $withdrawal->error) {
+                        return;
+                    }
+
+                    $account = Account::query()->where('id', $withdrawal->account_id)->lockForUpdate()->first();
+
+                    if (!$account) {
+                        $withdrawal->update([
+                            'error' => true,
+                            'error_reason' => 'Conta não encontrada',
+                            'done' => true,
+                        ]);
+                        return;
+                    }
+
+                    $amount = (float) $withdrawal->amount;
+                    $currentBalance = (float) $account->balance;
+
+                    if ($currentBalance < $amount) {
+                        // Regra de Falha: Saldo insuficiente
+                        $withdrawal->update([
+                            'error' => true,
+                            'error_reason' => 'Saldo insuficiente no momento da execução',
+                        ]);
+                        $this->logger->warning("Saque agendado {$withdrawal->id} falhou: Saldo insuficiente.");
+                        return;
+                    }
+
+                    // Sucesso: Deduzir saldo e marcar como feito
+                    $account->balance = number_format($currentBalance - $amount, 2, '.', '');
+                    $account->save();
+
+                    $withdrawal->update([
+                        'done' => true,
+                        'error' => false,
+                    ]);
+
+                    // Disparar Job de Email
+                    $this->asyncQueue->push(new SendWithdrawalEmailJob($withdrawal->id));
+                    
+                    $this->logger->info("Saque agendado {$withdrawal->id} processado com sucesso.");
+                });
+            } catch (\Throwable $e) {
+                $this->logger->error("Erro ao processar saque agendado {$withdrawal->id}: " . $e->getMessage());
+            }
+        }
     }
 }
