@@ -2,22 +2,50 @@
 
 ## 🎯 Sobre o Projeto
 
-O **SaquePix2** é uma API de Conta Digital robusta e escalável, projetada para processar transações financeiras com **alta performance** e **baixa latência**. Construída sobre o framework **Hyperf** (baseado em Swoole/Corrotinas), a aplicação adota uma arquitetura orientada a microsserviços e eventos.
+O **SaquePix2** é uma API de Conta Digital robusta e escalável, projetada para processar transações financeiras com **alta performance** e **baixa latência**. Construída sobre o framework **Hyperf** (baseado em Swoole/Corrotinas), a aplicação adota uma arquitetura orientada a microsserviços e eventos, preparada para suportar altos volumes de requisições simultâneas.
 
-O sistema gerencia o ciclo de vida completo de uma conta digital, incluindo criação, depósitos e, principalmente, **saques via PIX** (imediatos e agendados). A solução implementa filas assíncronas para notificações e tarefas agendadas (Cron) para processamento de transações futuras, garantindo que a thread principal da API permaneça livre para atender novas requisições.
+O sistema gerencia o ciclo de vida completo de uma conta digital, garantindo consistência e segurança em operações críticas como depósitos e saques via PIX.
 
 ---
 
 ## 🛠 Stack Tecnológica
 
-A stack foi escolhida para maximizar a concorrência e a eficiência de recursos:
+Nossa stack foi selecionada para garantir eficiência, escalabilidade e observabilidade:
 
 - **Linguagem:** PHP 8.2
 - **Framework:** Hyperf 3.1 (Swoole/Coroutines)
 - **Banco de Dados:** MySQL 8.0
 - **Cache & Filas:** Redis (Async Queue)
+- **Observabilidade:** Fluentd (Centralização de Logs)
 - **Containerização:** Docker & Docker Compose
 - **Testes de E-mail:** MailHog
+
+---
+
+## ✅ Funcionalidades e Regras de Negócio
+
+Abaixo, as regras implementadas e validadas no sistema:
+
+- ✅ **Saque Imediato** com processamento assíncrono (Alta disponibilidade).
+- ✅ **Saque Agendado** via Crontab (Garantia de atomicidade na execução).
+- ✅ **Validação de Saldo** em tempo real (Retorno HTTP 422 amigável).
+- ✅ **Bloqueio de Agendamento** superior a 7 dias (Regra de negócio).
+- ✅ **Notificação por E-mail** (MailHog) enviada para a chave PIX de destino.
+
+---
+
+## 🚀 Diferencial Competitivo: Testes Automatizados
+
+Diferente de outras soluções, este projeto inclui uma **suíte de testes E2E (End-to-End)** que valida a integridade de todo o sistema com um único comando. Isso garante que fluxos críticos (Criação de conta -> Depósito -> Saque -> Notificação) funcionem perfeitamente antes de qualquer deploy.
+
+Para rodar os testes e ver a mágica acontecer:
+
+```powershell
+./tests/e2e_test.ps1
+```
+
+### Evidência de Execução:
+![Testes Automatizados](.github/images/evidence.png)
 
 ---
 
@@ -26,131 +54,80 @@ A stack foi escolhida para maximizar a concorrência e a eficiência de recursos
 Como Tech Lead, as seguintes decisões foram tomadas para garantir robustez, segurança e manutenibilidade:
 
 ### 1. 🆔 UUIDs (Universally Unique Identifiers)
-Adotamos UUIDs (v4) como chaves primárias em todas as tabelas (`accounts`, `account_withdraws`, etc.).
-- **Porquê:** Garante unicidade global, dificulta a enumeração de registros por atacantes (security through obscurity) e facilita a distribuição de dados (sharding) em cenários futuros de escala horizontal.
+Adotamos UUIDs (v4) como chaves primárias em todas as tabelas.
+- **Porquê:** Garante unicidade global, dificulta a enumeração de registros por atacantes (*security through obscurity*) e facilita estratégias de *sharding* em bancos de dados distribuídos.
 
 ### 2. ⚡ Filas Assíncronas (Redis)
-O envio de e-mails transacionais é desacoplado da requisição HTTP principal.
-- **Porquê:** Enviar e-mail é uma operação lenta e propensa a falhas de rede. Ao mover essa responsabilidade para um *Job* no Redis, a API responde instantaneamente ao usuário (`201 Created`), enquanto o "Worker" processa o envio em background, melhorando drasticamente a experiência do usuário e o throughput da API.
+O envio de e-mails e processamentos pesados são desacoplados da requisição HTTP principal.
+- **Porquê:** Ao mover o envio de e-mail para um *Job* no Redis, a API responde instantaneamente ao usuário (`201 Created`), enquanto o "Worker" processa a tarefa em background. Isso evita que falhas em serviços externos (SMTP) impactem a experiência do usuário.
 
-### 3. ⏰ Crontab & Agendamento
-Saques agendados não bloqueiam recursos. Eles são persistidos no banco e processados por uma tarefa Cron (`ProcessScheduledWithdrawals`) que roda a cada minuto.
-- **Porquê:** Permite o agendamento flexível de transações sem manter conexões abertas. A lógica de negócio no Cron garante atomicidade e consistência, verificando saldo e executando a transação no momento exato.
-
-### 4. 🛡️ Centralized Exception Handling
-Implementamos um tratamento global de exceções (`BusinessExceptionHandler`).
-- **Porquê:** Diferenciamos claramente erros de negócio (ex: "Saldo Insuficiente") de erros de sistema. Erros de negócio retornam **HTTP 422 Unprocessable Entity** com uma mensagem clara em JSON, enquanto erros inesperados retornam **500**. Isso facilita a integração por parte do front-end e mantém os logs limpos.
+### 3. 🛡️ Tratamento Centralizado de Exceções
+Implementamos um `BusinessExceptionHandler` global.
+- **Porquê:** Padroniza as respostas de erro da API. Exceções de negócio (como "Saldo Insuficiente") retornam **HTTP 422** com payloads JSON claros, facilitando a integração com o Front-end e mantendo os logs de erro do sistema limpos de falsos positivos.
 
 ---
 
-## 🚀 Guia de Instalação
+## 📦 Instalação e Uso
 
-Siga os passos abaixo para rodar o projeto localmente:
+Siga os passos abaixo para rodar o projeto localmente em minutos:
 
-### Pré-requisitos
-- Docker e Docker Compose instalados.
+### 1. Subir os containers
+```bash
+docker-compose up -d --build
+```
 
-### Passo a Passo
+### 2. Executar as Migrations
+```bash
+docker-compose exec saque-pix-app php bin/hyperf.php migrate
+```
 
-1. **Subir os containers:**
-   ```bash
-   docker-compose up -d --build
-   ```
-
-2. **Executar as Migrations (Criação das tabelas):**
-   ```bash
-   docker-compose exec saque-pix-app php bin/hyperf.php migrate
-   ```
-
-3. **Acessar a Aplicação:**
-   - **API:** `http://localhost:9501`
-   - **MailHog (E-mails):** `http://localhost:8025`
+### 3. Acessar a Aplicação
+- **API:** `http://localhost:9501`
+- **MailHog:** `http://localhost:8025`
 
 ---
 
-## 📖 Documentação da API
+## 📖 Exemplos de Uso (JSON)
 
-Abaixo estão os principais endpoints para interagir com o sistema.
+### Criar Conta
+**POST** `/accounts`
+```json
+{
+  "name": "Carlos Desenvolvedor",
+  "document": "12345678900",
+  "email": "carlos@example.com"
+}
+```
 
-### 1. Criar Conta
-Cria uma nova conta digital com saldo inicial zero.
+### Realizar Saque (PIX Imediato)
+**POST** `/accounts/{uuid}/withdraw`
+```json
+{
+  "method": "PIX",
+  "amount": 50.00,
+  "pix": {
+    "type": "email",
+    "key": "chave@pix.com"
+  },
+  "schedule": null
+}
+```
 
-- **Endpoint:** `POST /accounts`
-- **Body:**
-  ```json
-  {
-    "name": "Carlos Desenvolvedor",
-    "document": "12345678900",
-    "email": "carlos@example.com"
-  }
-  ```
-- **Resposta (201 Created):**
-  ```json
-  {
-    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-    "name": "Carlos Desenvolvedor",
-    "balance": "0.00",
-    ...
-  }
-  ```
+### Realizar Saque Agendado
+**POST** `/accounts/{uuid}/withdraw`
+```json
+{
+  "method": "PIX",
+  "amount": 50.00,
+  "pix": {
+    "type": "cpf",
+    "key": "12345678900"
+  },
+  "schedule": "2025-12-01 10:00:00"
+}
 
-### 2. Realizar Depósito
-Adiciona saldo a uma conta existente.
-
-- **Endpoint:** `POST /accounts/{uuid}/deposit`
-- **Body:**
-  ```json
-  {
-    "amount": 100.50
-  }
-  ```
-- **Resposta (200 OK):**
-  ```json
-  {
-    "account_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-    "current_balance": "100.50"
-  }
-  ```
-
-### 3. Solicitar Saque (PIX)
-Realiza um saque imediato ou agendado.
-
-- **Endpoint:** `POST /accounts/{uuid}/withdraw`
-- **Body (Saque Imediato):**
-  ```json
-  {
-    "method": "PIX",
-    "amount": 50.00,
-    "pix": {
-      "type": "email",
-      "key": "chave@pix.com"
-    },
-    "schedule": null
-  }
-  ```
-
-- **Body (Saque Agendado):**
-  *A data deve ser futura e no máximo até 7 dias.*
-  ```json
-  {
-    "method": "PIX",
-    "amount": 50.00,
-    "pix": {
-      "type": "cpf",
-      "key": "12345678900"
-    },
-    "schedule": "2025-12-01 10:00:00"
-  }
-  ```
-
-- **Resposta de Erro (Ex: Saldo Insuficiente - 422):**
-  ```json
-  {
-    "message": "Saldo insuficiente",
-    "code": 422
-  }
-  ```
-  ## ✅ Qualidade Assegurada (Testes E2E)
+```
+## ✅ Qualidade Assegurada (Testes E2E)
 
 O projeto inclui uma suíte de testes automatizados (`tests/e2e_test.ps1`) que valida todos os cenários críticos:
 1. Criação de Conta e Validação de UUID.
