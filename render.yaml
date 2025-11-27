@@ -49,26 +49,17 @@ services:
   # --------------------------------------------------------------------------------
   # FRONTEND SERVICE (Flutter Web)
   # --------------------------------------------------------------------------------
-  - type: site
+  - type: web
     name: saque-pix-frontend
     env: static
     buildCommand: |
-      cd frontend
-      # Instala o Flutter (Render não tem nativo, precisa baixar ou usar imagem custom, 
-      # mas para static sites simples, o padrão é node/static. 
-      # OBS: Render nativamente não suporta build de Flutter em Static Sites sem scripts customizados.
-      # Vou assumir que o usuário sabe que precisa de um script de build ou que vai commitar o build.
-      # MAS, o pedido diz "comando de build é flutter build web --release".
-      # O Render não tem Flutter pré-instalado em ambiente estático padrão.
-      # Vou colocar o comando solicitado, mas adicionar um aviso no PR/Comentário.
-      # Para funcionar "out of the box" no Render Static, geralmente se usa um script de install.
-      # Vou adicionar um script simples de install do flutter aqui para garantir.
       if [ ! -d "flutter" ]; then
         git clone https://github.com/flutter/flutter.git -b stable
       fi
       export PATH="$PATH:`pwd`/flutter/bin"
+      cd frontend
       flutter build web --release
-    publishDir: frontend/build/web
+    staticPublishPath: frontend/build/web
     envVars:
       - key: API_URL
         fromService:
