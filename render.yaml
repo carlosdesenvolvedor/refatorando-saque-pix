@@ -12,16 +12,13 @@ services:
       - key: APP_ENV
         value: production
       - key: DB_HOST
-        fromService:
-          type: pserv
-          name: saque-pix-mysql
-          property: host
+        value: por_enquanto_vazio
       - key: DB_DATABASE
         value: pix_withdraw_db
       - key: DB_USERNAME
         value: user
       - key: DB_PASSWORD
-        value: root123
+        value: mudar_no_painel_depois
       - key: REDIS_HOST
         fromService:
           type: redis
@@ -74,28 +71,5 @@ services:
     plan: free # Ajuste conforme necessário
     ipAllowList: [] # Apenas interno
 
-  # --------------------------------------------------------------------------------
-  # MYSQL SERVICE
-  # --------------------------------------------------------------------------------
-  - type: pserv
-    name: saque-pix-mysql
-    env: docker
-    plan: starter
-    region: oregon
-    disk:
-      name: mysql-data
-      mountPath: /var/lib/mysql
-      sizeGB: 10
-    envVars:
-      - key: MYSQL_ROOT_PASSWORD
-        generateValue: true
-      - key: MYSQL_DATABASE
-        value: pix_withdraw_db
-      - key: MYSQL_USER
-        value: user
-      - key: MYSQL_PASSWORD
-        value: root123
-    # AQUI ESTÁ A CORREÇÃO:
-    dockerCommand: mysqld --default-authentication-plugin=mysql_native_password
-    repo: https://github.com/render-examples/mysql.git # Hack para usar imagem docker simples
+
 
