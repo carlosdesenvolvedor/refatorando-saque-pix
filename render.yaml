@@ -77,14 +77,13 @@ services:
     ipAllowList: [] # Apenas interno
 
   # --------------------------------------------------------------------------------
-  # MYSQL SERVICE (Private Service)
+  # MYSQL SERVICE
   # --------------------------------------------------------------------------------
   - type: pserv
     name: saque-pix-mysql
     env: docker
-    image: mysql:8.0
+    plan: starter
     region: oregon
-    plan: starter # Private services geralmente requerem plano pago para disco persistente
     disk:
       name: mysql-data
       mountPath: /var/lib/mysql
@@ -98,4 +97,7 @@ services:
         value: user
       - key: MYSQL_PASSWORD
         generateValue: true
+    # AQUI ESTÁ A CORREÇÃO:
+    dockerCommand: mysqld --default-authentication-plugin=mysql_native_password
+    repo: https://github.com/render-examples/mysql.git # Hack para usar imagem docker simples
 
