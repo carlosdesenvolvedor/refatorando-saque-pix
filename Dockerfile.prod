@@ -23,7 +23,7 @@ RUN mkdir -p runtime storage && chmod -R 777 runtime storage
 RUN rm -rf runtime/container
 
 # Gera o cache de proxy/scan (Otimização)
-RUN php bin/hyperf.php
+RUN php bin/hyperf.php di:init
 
 
 EXPOSE 9501
