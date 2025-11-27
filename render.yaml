@@ -1,0 +1,110 @@
+services:
+  # --------------------------------------------------------------------------------
+  # BACKEND SERVICE (Hyperf/Swoole)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: saque-pix-backend
+    env: docker
+    dockerfilePath: ./Dockerfile.prod
+    plan: free # Ajuste conforme necessário
+    region: oregon # Ajuste conforme necessário
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: saque-pix-mysql
+          property: host
+      - key: DB_DATABASE
+        value: pix_withdraw_db
+      - key: DB_USERNAME
+        value: user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: saque-pix-mysql
+          property: password
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: saque-pix-redis
+          property: host
+      - key: REDIS_PORT
+        value: 6379
+      # Configuração de E-mail (Fallback para Log se não houver SMTP)
+      - key: MAIL_MAILER
+        value: log
+      - key: MAIL_HOST
+        value: smtp.example.com # Placeholder para evitar erro de parse se for usado
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: null
+      - key: MAIL_PASSWORD
+        value: null
+      - key: MAIL_ENCRYPTION
+        value: null
+
+  # --------------------------------------------------------------------------------
+  # FRONTEND SERVICE (Flutter Web)
+  # --------------------------------------------------------------------------------
+  - type: static
+    name: saque-pix-frontend
+    env: static
+    buildCommand: |
+      cd frontend
+      # Instala o Flutter (Render não tem nativo, precisa baixar ou usar imagem custom, 
+      # mas para static sites simples, o padrão é node/static. 
+      # OBS: Render nativamente não suporta build de Flutter em Static Sites sem scripts customizados.
+      # Vou assumir que o usuário sabe que precisa de um script de build ou que vai commitar o build.
+      # MAS, o pedido diz "comando de build é flutter build web --release".
+      # O Render não tem Flutter pré-instalado em ambiente estático padrão.
+      # Vou colocar o comando solicitado, mas adicionar um aviso no PR/Comentário.
+      # Para funcionar "out of the box" no Render Static, geralmente se usa um script de install.
+      # Vou adicionar um script simples de install do flutter aqui para garantir.
+      if [ ! -d "flutter" ]; then
+        git clone https://github.com/flutter/flutter.git -b stable
+      fi
+      export PATH="$PATH:`pwd`/flutter/bin"
+      flutter build web --release
+    publishDir: frontend/build/web
+    envVars:
+      - key: API_URL
+        fromService:
+          type: web
+          name: saque-pix-backend
+          property: url
+
+  # --------------------------------------------------------------------------------
+  # REDIS SERVICE
+  # --------------------------------------------------------------------------------
+  - type: redis
+    name: saque-pix-redis
+    region: oregon
+    plan: free # Ajuste conforme necessário
+    ipAllowList: [] # Apenas interno
+
+  # --------------------------------------------------------------------------------
+  # MYSQL SERVICE (Private Service)
+  # --------------------------------------------------------------------------------
+  - type: pserv
+    name: saque-pix-mysql
+    env: docker
+    image: mysql:8.0
+    region: oregon
+    plan: starter # Private services geralmente requerem plano pago para disco persistente
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: pix_withdraw_db
+      - key: MYSQL_USER
+        value: user
+      - key: MYSQL_PASSWORD
+        generateValue: true
+
