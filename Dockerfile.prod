@@ -22,6 +22,10 @@ RUN mkdir -p runtime storage && chmod -R 777 runtime storage
 # Limpa cache do Hyperf para evitar conflitos de proxy antigos
 RUN rm -rf runtime/container
 
+# Gera o cache de proxy/scan (Otimização)
+RUN php bin/hyperf.php
+
+
 EXPOSE 9501
 
 # Tenta rodar a migration e depois inicia.
