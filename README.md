@@ -145,7 +145,7 @@ O projeto conta com um frontend moderno desenvolvido em **Flutter Web**, consumi
 
 ## ✅ Qualidade Assegurada (Testes E2E)
 
-O projeto inclui uma suíte de testes automatizados (`tests/e2e_test.ps1`) que valida todos os cenários críticos:
+O projeto inclui uma suíte de testes automatizados (`./test/scripts/teste_completo.ps1`) que valida todos os cenários críticos:
 1. Criação de Conta e Validação de UUID.
 2. Depósito e Atualização de Saldo.
 3. Saque Imediato (Integração com MailHog).
