@@ -1,20 +1,20 @@
 <?php
 
 declare(strict_types=1);
-use Hyperf\Database\Schema\Schema;
+
 use function Hyperf\Support\env;
 
 return [
     'default' => [
-        'driver' => 'pgsql', // <--- HARDCODED (Sem env, sem trim, sem erro)
+        'driver' => 'pgsql', // Valor fixo para garantir que não haja erros de variável de ambiente
         'host' => env('DB_HOST', 'localhost'),
-        'port' => env('DB_PORT', 3306),
-        'database' => env('DB_DATABASE', 'hyperf'),
-        'username' => env('DB_USERNAME', 'root'),
-        'password' => env('DB_PASSWORD', ''),
-        'charset' => env('DB_CHARSET', 'utf8'),
-        'collation' => env('DB_COLLATION', 'utf8_unicode_ci'),  
-        'prefix' => env('DB_PREFIX', ''),
+        'port' => env('DB_PORT', 5432),
+        'database' => env('DB_DATABASE', 'saque_pix_db'),
+        'username' => env('DB_USERNAME', 'saque_pix_db_user'),
+        'password' => env('DB_PASSWORD', 'sua_senha_default'),
+        'charset' => 'utf8',
+        'prefix' => '',
+        'schema' => 'public', // Necessário para PostgreSQL
         'pool' => [
             'min_connections' => 1,
             'max_connections' => 10,
@@ -22,15 +22,6 @@ return [
             'wait_timeout' => 3.0,
             'heartbeat' => -1,
             'max_idle_time' => 60.0,
-        ],
-        'schema' => 'public',
-        'sslmode' => 'prefer',
-        'options' => [
-            PDO::ATTR_CASE => PDO::CASE_NATURAL,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
-            PDO::ATTR_STRINGIFY_FETCHES => false,
-            PDO::ATTR_EMULATE_PREPARES => false,
         ],
     ],
 ];
