@@ -1,13 +1,12 @@
 <?php
 
 declare(strict_types=1);
-
 use Hyperf\Database\Schema\Schema;
 use function Hyperf\Support\env;
 
 return [
     'default' => [
-        'driver' => env('DB_DRIVER', 'mysql'), // Lê a variável do Render
+        'driver' => env('DB_DRIVER', 'mysql'),
         'host' => env('DB_HOST', 'localhost'),
         'port' => env('DB_PORT', 3306),
         'database' => env('DB_DATABASE', 'hyperf'),
@@ -22,12 +21,16 @@ return [
             'connect_timeout' => 10.0,
             'wait_timeout' => 3.0,
             'heartbeat' => -1,
-                'path' => 'app/Model',
-                'force_casts' => true,
-                'inheritance' => 'Model',
-                'uses' => '',
-                'table_mapping' => [],
-            ],
+            'max_idle_time' => 60.0,
+        ],
+        'schema' => 'public',
+        'sslmode' => 'prefer',
+        'options' => [
+            PDO::ATTR_CASE => PDO::CASE_NATURAL,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+            PDO::ATTR_EMULATE_PREPARES => false,
         ],
     ],
 ];
