@@ -15,6 +15,7 @@ class WithdrawRepositoryImpl implements WithdrawRepository {
     required double amount,
     required String pixType,
     required String pixKey,
+    String? schedule,
   }) async {
     try {
       final withdraw = await remoteDataSource.requestWithdraw(
@@ -22,6 +23,7 @@ class WithdrawRepositoryImpl implements WithdrawRepository {
         amount: amount,
         pixType: pixType,
         pixKey: pixKey,
+        schedule: schedule,
       );
       return Right(withdraw);
     } on DioException catch (e) {

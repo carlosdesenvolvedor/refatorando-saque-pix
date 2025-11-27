@@ -7,5 +7,6 @@ abstract class WithdrawRepository {
     required double amount,
     required String pixType,
     required String pixKey,
+    String? schedule,
   });
 }

@@ -9,6 +9,7 @@ abstract class WithdrawRemoteDataSource {
     required double amount,
     required String pixType,
     required String pixKey,
+    String? schedule,
   });
 }
 
@@ -23,6 +24,7 @@ class WithdrawRemoteDataSourceImpl implements WithdrawRemoteDataSource {
     required double amount,
     required String pixType,
     required String pixKey,
+    String? schedule,
   }) async {
     final response = await client.client.post(
       '/account/$accountId/balance/withdraw',
@@ -33,7 +35,7 @@ class WithdrawRemoteDataSourceImpl implements WithdrawRemoteDataSource {
           'type': pixType,
           'key': pixKey,
         },
-        'schedule': null,
+        'schedule': schedule,
       },
     );
 
