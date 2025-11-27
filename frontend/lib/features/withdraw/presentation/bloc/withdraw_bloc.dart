@@ -21,6 +21,7 @@ class WithdrawBloc extends Bloc<WithdrawEvent, WithdrawState> {
       amount: event.amount,
       pixType: event.pixType,
       pixKey: event.pixKey,
+      schedule: event.schedule,
     );
 
     result.fold(

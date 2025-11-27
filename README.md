@@ -8,6 +8,28 @@ O sistema gerencia o ciclo de vida completo de uma conta digital, garantindo con
 
 ---
 
+## 🚀 Demo Online (Live Preview)
+
+Experimente a aplicação rodando em produção na nuvem (Render.com):
+
+| Serviço | URL |
+| :--- | :--- |
+| **Frontend (App)** | [https://saque-pix-frontend.onrender.com/](https://saque-pix-frontend.onrender.com/) |
+| **Backend (API)** | [https://saque-pix-backend.onrender.com](https://saque-pix-backend.onrender.com) |
+
+> [!NOTE]
+> **Instruções Rápidas:** O ambiente de produção está rodando na nuvem. O banco de dados é reiniciado periodicamente.
+> Para testar: **Crie uma nova conta** -> **Deposite um valor** -> **Realize o Saque**.
+
+### ☁️ Infraestrutura de Nuvem
+Atualmente hospedado no **Render**, utilizando a seguinte arquitetura:
+- **Banco de Dados:** PostgreSQL (Instância `dpg-d4k79v8dl3ps73dedvh0-a`)
+- **Cache/Fila:** Redis (Instância `red-d4k71ifdiees73bb6d90`)
+- **Backend:** Docker Container (Hyperf)
+- **Frontend:** Static Site (Flutter Web)
+
+---
+
 ## 🛠 Stack Tecnológica
 
 Nossa stack foi selecionada para garantir eficiência, escalabilidade e observabilidade:

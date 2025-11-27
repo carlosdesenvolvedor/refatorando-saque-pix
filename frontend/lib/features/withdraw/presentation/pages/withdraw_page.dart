@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../../../core/di/service_locator.dart';
 import '../bloc/withdraw_bloc.dart';
 import '../bloc/withdraw_event.dart';
@@ -18,12 +20,29 @@ class _WithdrawPageState extends State<WithdrawPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _pixKeyController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+
+  final _dateMask = MaskTextInputFormatter(
+    mask: '##/##/####',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+  final _timeMask = MaskTextInputFormatter(
+    mask: '##:##',
+    filter: {"#": RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
   String _pixType = 'email';
+  bool _isScheduled = false;
 
   @override
   void dispose() {
     _amountController.dispose();
     _pixKeyController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
     super.dispose();
   }
 
@@ -165,6 +184,67 @@ class _WithdrawPageState extends State<WithdrawPage> {
                                     ],
                                   ),
                                 ),
+                                const SizedBox(height: 24),
+                                // Switch para ativar agendamento
+                                SwitchListTile(
+                                  title: const Text('Agendar para o futuro?'),
+                                  value: _isScheduled,
+                                  activeColor: const Color(0xFF820AD1),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _isScheduled = value;
+                                      if (!value) {
+                                        _dateController.clear();
+                                        _timeController.clear();
+                                      }
+                                    });
+                                  },
+                                ),
+                                // Se ativado, mostra os campos de data e hora
+                                if (_isScheduled) ...[
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _dateController,
+                                          inputFormatters: [_dateMask],
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Data',
+                                            hintText: 'dd/mm/aaaa',
+                                            prefixIcon: Icon(Icons.calendar_today, color: Color(0xFF820AD1)),
+                                          ),
+                                          validator: (value) {
+                                            if (_isScheduled && (value == null || value.isEmpty || value.length != 10)) {
+                                              return 'Data inválida';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _timeController,
+                                          inputFormatters: [_timeMask],
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Hora',
+                                            hintText: 'hh:mm',
+                                            prefixIcon: Icon(Icons.access_time, color: Color(0xFF820AD1)),
+                                          ),
+                                          validator: (value) {
+                                            if (_isScheduled && (value == null || value.isEmpty || value.length != 5)) {
+                                              return 'Hora inválida';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 const Spacer(),
                                 const SizedBox(height: 24),
                                 SizedBox(
@@ -175,12 +255,37 @@ class _WithdrawPageState extends State<WithdrawPage> {
                                       if (_formKey.currentState!.validate()) {
                                         final amount =
                                             double.tryParse(_amountController.text) ?? 0.0;
+                                        
+                                        String? formattedSchedule;
+                                        if (_isScheduled) {
+                                          try {
+                                            final dateParts = _dateController.text.split('/');
+                                            final timeParts = _timeController.text.split(':');
+                                            
+                                            final dateTime = DateTime(
+                                              int.parse(dateParts[2]),
+                                              int.parse(dateParts[1]),
+                                              int.parse(dateParts[0]),
+                                              int.parse(timeParts[0]),
+                                              int.parse(timeParts[1]),
+                                            );
+                                            
+                                            formattedSchedule = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Data ou hora inválida')),
+                                            );
+                                            return;
+                                          }
+                                        }
+
                                         context.read<WithdrawBloc>().add(
                                               WithdrawRequested(
                                                 accountId: widget.accountId,
                                                 amount: amount,
                                                 pixType: _pixType,
                                                 pixKey: _pixKeyController.text,
+                                                schedule: formattedSchedule,
                                               ),
                                             );
                                       }

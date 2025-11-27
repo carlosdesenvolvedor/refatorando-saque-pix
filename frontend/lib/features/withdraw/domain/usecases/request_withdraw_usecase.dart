@@ -12,12 +12,14 @@ class RequestWithdrawUseCase {
     required double amount,
     required String pixType,
     required String pixKey,
+    String? schedule,
   }) {
     return repository.requestWithdraw(
       accountId: accountId,
       amount: amount,
       pixType: pixType,
       pixKey: pixKey,
+      schedule: schedule,
     );
   }
 }
