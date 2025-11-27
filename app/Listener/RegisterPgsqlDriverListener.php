@@ -9,7 +9,7 @@ use Hyperf\Database\Connectors\PostgresConnector;
 use Hyperf\DbConnection\ConnectionFactory;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
-use Hyperf\Framework\Event\BootApplication;
+use Hyperf\Framework\Event\BeforeMainWorkerStart;
 
 #[Listener]
 class RegisterPgsqlDriverListener implements ListenerInterface
@@ -25,7 +25,7 @@ class RegisterPgsqlDriverListener implements ListenerInterface
     {
         // Garante que rode no início do boot da aplicação, antes de qualquer processo.
         return [
-            BootApplication::class,
+            BeforeMainWorkerStart::class,
         ];
     }
 
