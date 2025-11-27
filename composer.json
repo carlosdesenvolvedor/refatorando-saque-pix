@@ -61,6 +61,13 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "extra": {
+        "hyperf": {
+            "config": [
+                "App\\ConfigProvider"
+            ]
+        }
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
