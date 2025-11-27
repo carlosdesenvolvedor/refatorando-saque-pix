@@ -16,8 +16,8 @@ COPY . .
 # Instala dependências PHP do Composer (Modo Produção)
 RUN composer install --no-dev -o
 
-# Garante permissões para pastas de escrita
-RUN chmod -R 777 runtime storage
+# Cria as pastas se não existirem e dá permissão
+RUN mkdir -p runtime storage && chmod -R 777 runtime storage
 
 EXPOSE 9501
 
