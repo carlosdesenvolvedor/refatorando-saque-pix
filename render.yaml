@@ -21,10 +21,7 @@ services:
       - key: DB_USERNAME
         value: user
       - key: DB_PASSWORD
-        fromService:
-          type: pserv
-          name: saque-pix-mysql
-          property: password
+        value: root123
       - key: REDIS_HOST
         fromService:
           type: redis
@@ -53,6 +50,7 @@ services:
     name: saque-pix-frontend
     env: static
     buildCommand: |
+      export API_URL="https://$API_URL"
       if [ ! -d "flutter" ]; then
         git clone https://github.com/flutter/flutter.git -b stable
       fi
@@ -65,7 +63,7 @@ services:
         fromService:
           type: web
           name: saque-pix-backend
-          property: url
+          property: host
 
   # --------------------------------------------------------------------------------
   # REDIS SERVICE
@@ -96,7 +94,7 @@ services:
       - key: MYSQL_USER
         value: user
       - key: MYSQL_PASSWORD
-        generateValue: true
+        value: root123
     # AQUI ESTÁ A CORREÇÃO:
     dockerCommand: mysqld --default-authentication-plugin=mysql_native_password
     repo: https://github.com/render-examples/mysql.git # Hack para usar imagem docker simples
