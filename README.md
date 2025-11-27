@@ -168,11 +168,11 @@ O projeto conta com um frontend moderno desenvolvido em **Flutter Web**, consumi
 ### 📅 Demonstração: Saque Agendado
 
 **1. No App (Frontend):**
-![Tela de sucesso no aplicativo após o usuário confirmar o agendamento para uma data futura.](.github/images/agendamento_sucesso.png)
+![Tela de sucesso no aplicativo após o usuário confirmar o agendamento para uma data futura.](.github/images/agenda_futuro.png)
 *Tela de sucesso no aplicativo após o usuário confirmar o agendamento para uma data futura.*
 
 **2. No E-mail (Backend/Cron):**
-![Comprovante recebido no MailHog (ambiente de testes) confirmando que o Cron Job processou o agendamento na hora correta.](.github/images/agendamento_email.png)
+![Comprovante recebido no MailHog (ambiente de testes) confirmando que o Cron Job processou o agendamento na hora correta.](.github/images/tela_agendamento.png)
 *Comprovante recebido no MailHog (ambiente de testes) confirmando que o Cron Job processou o agendamento na hora correta.*
 
 ## ✅ Qualidade Assegurada (Testes E2E)
