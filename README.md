@@ -41,7 +41,7 @@ Diferente de outras soluções, este projeto inclui uma **suíte de testes E2E (
 Para rodar os testes e ver a mágica acontecer:
 
 ```powershell
-./tests/e2e_test.ps1
+./test/scripts/teste_completo.ps1
 ```
 
 ### Evidência de Execução:
