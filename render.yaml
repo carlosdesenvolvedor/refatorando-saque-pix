@@ -49,7 +49,7 @@ services:
   # --------------------------------------------------------------------------------
   # FRONTEND SERVICE (Flutter Web)
   # --------------------------------------------------------------------------------
-  - type: static
+  - type: site
     name: saque-pix-frontend
     env: static
     buildCommand: |
