@@ -5,15 +5,15 @@ declare(strict_types=1);
 use function Hyperf\Support\env;
 
 // DEBUG TEMPORÁRIO: Descomente para ver as variáveis no log do Render
-// echo "DEBUG DB CONFIG:\n";
-// var_dump([
-//     'host' => env('DB_HOST'),
-//     'port' => env('DB_PORT'),
-//     'database' => env('DB_DATABASE'),
-//     'username' => env('DB_USERNAME'),
-//     'password_len' => strlen(env('DB_PASSWORD', '')),
-// ]);
-// die(); 
+echo "DEBUG DB CONFIG:\n";
+var_dump([
+    'host' => env('DB_HOST'),
+    'port' => env('DB_PORT'),
+    'database' => env('DB_DATABASE'),
+    'username' => env('DB_USERNAME'),
+    'password_len' => strlen(env('DB_PASSWORD', '')),
+]);
+die(); 
 
 return [
     'default' => [
