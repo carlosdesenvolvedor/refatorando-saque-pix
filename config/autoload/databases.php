@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 use function Hyperf\Support\env;
 
+// DEBUG TEMPORÁRIO: Descomente para ver as variáveis no log do Render
+// echo "DEBUG DB CONFIG:\n";
+// var_dump([
+//     'host' => env('DB_HOST'),
+//     'port' => env('DB_PORT'),
+//     'database' => env('DB_DATABASE'),
+//     'username' => env('DB_USERNAME'),
+//     'password_len' => strlen(env('DB_PASSWORD', '')),
+// ]);
+// die(); 
+
 return [
     'default' => [
         'driver' => 'pgsql', // Valor fixo para garantir que não haja erros de variável de ambiente
@@ -15,6 +26,10 @@ return [
         'charset' => 'utf8',
         'prefix' => '',
         'schema' => 'public', // Necessário para PostgreSQL
+        'sslmode' => 'require', // Importante para conexões em nuvem (Render/AWS/etc)
+        'options' => [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ],
         'pool' => [
             'min_connections' => 1,
             'max_connections' => 10,
