@@ -168,7 +168,13 @@ O projeto inclui uma suíte de testes automatizados (`./test/scripts/teste_compl
 ### Evidência de Execução:
 ![Testes Automatizados](.github/images/evidence.png)
 
-em andamento...->> Live Preview
+
+A versão online abaixo oferece uma experiência completa e interativa do sistema. Sinta-se à vontade para criar contas, realizar depósitos, agendar saques e explorar todas as funcionalidades diretamente no seu navegador. É o ambiente perfeito para testar o fluxo completo da aplicação sem a necessidade de configurações locais.
+
+<div align="center">
+  <video src=".github/videos/demonstracao_videos.mp4" width="100%" controls autoplay loop muted></video>
+</div>
+
 
 ## 🚀 Demo Online (Live Preview)
 
