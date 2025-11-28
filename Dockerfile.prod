@@ -31,4 +31,4 @@ EXPOSE 9501
 
 # Tenta rodar a migration e depois inicia.
 # Se a migration falhar, o container morre (o que é bom para debug).
-CMD sh -c "ls -R migrations && rm -rf runtime/container && php bin/hyperf.php migrate --force && php bin/hyperf.php start"
+CMD sh -c "rm -rf runtime/container && php bin/hyperf.php migrate --force && php bin/hyperf.php start"

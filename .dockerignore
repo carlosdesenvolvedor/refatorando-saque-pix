@@ -4,3 +4,4 @@
 !config/
 !composer.*
 !docker-entrypoint.sh
+!migrations/
