@@ -12,13 +12,9 @@ services:
       - key: APP_ENV
         value: production
       - key: DB_HOST
-        value: por_enquanto_vazio
       - key: DB_DATABASE
-        value: pix_withdraw_db
       - key: DB_USERNAME
-        value: user
       - key: DB_PASSWORD
-        value: mudar_no_painel_depois
       - key: DB_DRIVER
         value: pgsql
       - key: REDIS_HOST
