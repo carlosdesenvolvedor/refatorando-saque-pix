@@ -21,8 +21,7 @@ RUN mkdir -p runtime storage && chmod -R 777 runtime storage
 
 # Limpa cache do Hyperf para evitar conflitos de proxy antigos
 RUN rm -rf runtime/container
-# Garante que a configuração seja limpa antes de gerar o novo cache
-RUN php bin/hyperf.php config:clear
+
 
 # Gera o cache de proxy/scan (Otimização)
 RUN php bin/hyperf.php
