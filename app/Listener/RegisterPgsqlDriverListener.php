@@ -25,7 +25,7 @@ class RegisterPgsqlDriverListener implements ListenerInterface
     {
         // Garante que rode no início do boot da aplicação, antes de qualquer processo.
         return [
-            BeforeMainWorkerStart::class,
+            \Hyperf\Framework\Event\BootApplication::class,
         ];
     }
 
