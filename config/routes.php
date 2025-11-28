@@ -54,6 +54,21 @@ Router::addServer('http', function () {
         }
     });
 
+    Router::get('/debug-server', function () {
+        $config = \Hyperf\Context\ApplicationContext::getContainer()->get(\Hyperf\Contract\ConfigInterface::class);
+        
+        return [
+            'php_version' => phpversion(),
+            'extensions' => get_loaded_extensions(),
+            'drivers_pdo' => \PDO::getAvailableDrivers(), // <--- ISSO É O MAIS IMPORTANTE
+            'db_config' => $config->get('databases.default'), // Mostra o que o Hyperf leu do .env
+            'env_vars' => [
+                'DB_DRIVER' => getenv('DB_DRIVER'),
+                'DB_CONNECTION' => getenv('DB_CONNECTION'),
+            ]
+        ];
+    });
+
     // Nova rota de saque conforme especificação
     Router::post('/account/{accountId}/balance/withdraw', 'App\Controller\WithdrawalController@store');
 });

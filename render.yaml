@@ -1,0 +1,73 @@
+services:
+  # --------------------------------------------------------------------------------
+  # BACKEND SERVICE (Hyperf/Swoole)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: saque-pix-backend
+    env: docker
+    dockerfilePath: ./Dockerfile.prod
+    plan: free # Ajuste conforme necessário
+    region: oregon # Ajuste conforme necessário
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DB_HOST
+      - key: DB_DATABASE
+      - key: DB_USERNAME
+      - key: DB_PASSWORD
+      - key: DB_DRIVER
+        value: pgsql
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: saque-pix-redis
+          property: host
+      - key: REDIS_PORT
+        value: 6379
+      # Configuração de E-mail (Fallback para Log se não houver SMTP)
+      - key: MAIL_MAILER
+        value: log
+      - key: MAIL_HOST
+        value: smtp.example.com # Placeholder para evitar erro de parse se for usado
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: null
+      - key: MAIL_PASSWORD
+        value: null
+      - key: MAIL_ENCRYPTION
+        value: null
+
+  # --------------------------------------------------------------------------------
+  # FRONTEND SERVICE (Flutter Web)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: saque-pix-frontend
+    env: static
+    buildCommand: |
+      export API_URL="https://$API_URL"
+      if [ ! -d "flutter" ]; then
+        git clone https://github.com/flutter/flutter.git -b stable
+      fi
+      export PATH="$PATH:`pwd`/flutter/bin"
+      cd frontend
+      flutter build web --release
+    staticPublishPath: frontend/build/web
+    envVars:
+      - key: API_URL
+        fromService:
+          type: web
+          name: saque-pix-backend
+          property: host
+
+  # --------------------------------------------------------------------------------
+  # REDIS SERVICE
+  # --------------------------------------------------------------------------------
+  - type: redis
+    name: saque-pix-redis
+    region: oregon
+    plan: free # Ajuste conforme necessário
+    ipAllowList: [] # Apenas interno
+
+
+

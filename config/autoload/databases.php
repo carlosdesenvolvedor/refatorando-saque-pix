@@ -1,51 +1,42 @@
 <?php
 
 declare(strict_types=1);
-/**
- * This file is part of Hyperf.
- *
- * @link     https://www.hyperf.io
- * @document https://hyperf.wiki
- * @contact  group@hyperf.io
- * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
- */
+
 use function Hyperf\Support\env;
+
+// DEBUG TEMPORÁRIO: Descomente para ver as variáveis no log do Render
+// echo "DEBUG DB CONFIG:\n";
+// var_dump([
+//     'host' => env('DB_HOST'),
+//     'port' => env('DB_PORT'),
+//     'database' => env('DB_DATABASE'),
+//     'username' => env('DB_USERNAME'),
+//     'password_len' => strlen(env('DB_PASSWORD', '')),
+// ]);
+// die(); 
 
 return [
     'default' => [
-        'driver' => env('DB_DRIVER', 'mysql'),
+        'driver' => env('DB_DRIVER', 'pgsql'),
         'host' => env('DB_HOST', 'localhost'),
-        'port' => env('DB_PORT', 3306),
-        'database' => env('DB_DATABASE', 'hyperf'),
-        'username' => env('DB_USERNAME', 'root'),
-        'password' => env('DB_PASSWORD', ''),
-        'charset' => env('DB_CHARSET', 'utf8mb4'),
-        'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-        'prefix' => env('DB_PREFIX', ''),
+        'port' => env('DB_PORT', 5432),
+        'database' => env('DB_DATABASE', 'saque_pix_db'),
+        'username' => env('DB_USERNAME', 'saque_pix_db_user'),
+        'password' => env('DB_PASSWORD', 'sua_senha_default'),
+        'charset' => 'utf8',
+        'prefix' => '',
+        'schema' => 'public', // Necessário para PostgreSQL
+        'sslmode' => 'require', // Importante para conexões em nuvem (Render/AWS/etc)
+        'options' => [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ],
         'pool' => [
             'min_connections' => 1,
             'max_connections' => 10,
             'connect_timeout' => 10.0,
             'wait_timeout' => 3.0,
             'heartbeat' => -1,
-            'max_idle_time' => (float) env('DB_MAX_IDLE_TIME', 60),
-        ],
-        'cache' => [
-            'handler' => Hyperf\ModelCache\Handler\RedisHandler::class,
-            'cache_key' => '{mc:%s:m:%s}:%s:%s',
-            'prefix' => 'default',
-            'ttl' => 3600 * 24,
-            'empty_model_ttl' => 600,
-            'load_script' => true,
-        ],
-        'commands' => [
-            'gen:model' => [
-                'path' => 'app/Model',
-                'force_casts' => true,
-                'inheritance' => 'Model',
-                'uses' => '',
-                'table_mapping' => [],
-            ],
+            'max_idle_time' => 60.0,
         ],
     ],
 ];

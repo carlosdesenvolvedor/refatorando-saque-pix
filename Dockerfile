@@ -5,7 +5,7 @@ LABEL maintainer="Hyperf Developers <group@hyperf.io>"
 WORKDIR /app
 
 # Apenas dependências úteis
-RUN apk update && apk add --no-cache mysql-client
+RUN apk update && apk add --no-cache mysql-client php82-pdo_pgsql
 
 # Copia o composer da imagem oficial
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

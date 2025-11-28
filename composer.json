@@ -20,6 +20,7 @@
         "hyperf/config": "~3.1.0",
         "hyperf/crontab": "~3.1.0",
         "hyperf/db-connection": "~3.1.0",
+        "hyperf/database-pgsql": "~3.1.0",
         "hyperf/di": "~3.1.0",
         "hyperf/framework": "~3.1.0",
         "hyperf/guzzle": "~3.1.0",
@@ -44,7 +45,6 @@
         "mockery/mockery": "^1.0",
         "phpstan/phpstan": "^1.0",
         "swoole/ide-helper": "dev-master"
-       
     },
     "autoload": {
         "psr-4": {
@@ -53,7 +53,7 @@
         "files": [
             "app/Functions.php"
         ]
-        },
+    },
     "autoload-dev": {
         "psr-4": {
             "HyperfTest\\": "./test/"
@@ -61,6 +61,7 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "extra": [],
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
@@ -78,4 +79,4 @@
         "start": "php ./bin/hyperf.php start",
         "server:watch": "watch"
     }
-    }
+}

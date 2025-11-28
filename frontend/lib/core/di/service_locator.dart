@@ -22,7 +22,7 @@ final sl = GetIt.instance;
 
 void setupServiceLocator() {
   // Core
-  sl.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: 'http://localhost:9501'));
+  sl.registerLazySingleton<ApiClient>(() => ApiClient());
   sl.registerLazySingleton<LocalStorageService>(() => LocalStorageService());
 
   // Features - Account
