@@ -17,7 +17,7 @@ use function Hyperf\Support\env;
 
 return [
     'default' => [
-        'driver' => env('DB_DRIVER', 'postgres'),
+        'driver' => env('DB_DRIVER', 'pgsql'),
         'host' => env('DB_HOST', 'localhost'),
         'port' => env('DB_PORT', 5432),
         'database' => env('DB_DATABASE', 'saque_pix_db'),

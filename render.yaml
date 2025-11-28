@@ -20,7 +20,7 @@ services:
       - key: DB_PASSWORD
         value: mudar_no_painel_depois
       - key: DB_DRIVER
-        value: postgres
+        value: pgsql
       - key: REDIS_HOST
         fromService:
           type: redis
