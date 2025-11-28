@@ -172,7 +172,7 @@ O projeto inclui uma suíte de testes automatizados (`./test/scripts/teste_compl
 A versão online abaixo oferece uma experiência completa e interativa do sistema. Sinta-se à vontade para criar contas, realizar depósitos, agendar saques e explorar todas as funcionalidades diretamente no seu navegador. É o ambiente perfeito para testar o fluxo completo da aplicação sem a necessidade de configurações locais.
 
 <div align="center">
-  <video src=".github/videos/demonstracao_videos.mp4" width="100%" controls autoplay loop muted></video>
+  <video src="https://github.com/user-attachments/assets/035d50e4-85f5-4943-94f9-f3c185086e85" width="100%" controls autoplay loop muted></video>
 </div>
 
 
