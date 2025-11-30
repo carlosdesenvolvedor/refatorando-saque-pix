@@ -34,6 +34,13 @@ Router::addServer('http', function () {
         return '';
     });
 
+    // Benchmark Demo Routes
+    Router::get('/benchmark/heavy', 'App\Controller\BenchmarkController@heavy');
+    Router::get('/benchmark/god', 'App\Controller\BenchmarkController@god');
+    Router::get('/benchmark/insane', 'App\Controller\BenchmarkController@insaneMode');
+    Router::get('/benchmark/singularity', 'App\Controller\BenchmarkController@singularity');
+
+
     Router::get('/debug-mail', function () {
         try {
             // 1. Pega o último saque com o relacionamento 'account' carregado (Eager Loading)
