@@ -252,6 +252,6 @@ Para ilustrar o poder do I/O Não-Bloqueante, compare os resultados abaixo:
 ## 🎥 Performance Demo
 
 <div align="center">
-  <video src=".github/videos/performace.mp4" width="100%" controls></video>
+  <video src="https://github.com/user-attachments/assets/6e4891f9-9903-4dc4-95fd-4b688d8cb66b" width="100%" controls></video>
 </div>
 
