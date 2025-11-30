@@ -249,3 +249,9 @@ Para ilustrar o poder do I/O Não-Bloqueante, compare os resultados abaixo:
 
 > *Nota: Em frameworks tradicionais, cada requisição bloqueia o processo até finalizar (I/O Blocking). No Hyperf, enquanto uma requisição espera (ex: resposta do banco), a CPU processa outras milhares.*
 
+## 🎥 Performance Demo
+
+<div align="center">
+  <video src=".github/videos/performace.mp4" width="100%" controls></video>
+</div>
+
